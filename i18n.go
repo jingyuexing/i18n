@@ -39,18 +39,18 @@ func (i *I18n) T(path string, templates ...map[string]any) string {
 	}
 	translate := ""
 
-    var loadingFunction func(lang string, path string) string
+	var loadingFunction func(lang string, path string) string
 
-    switch i.Message[local].(type) {
-	case  map[string]any:
+	switch i.Message[local].(type) {
+	case map[string]any:
 		loadingFunction = i.loadMapTranslate
 	default:
 		loadingFunction = i.loadStructTranslate
 	}
 
-    translate = loadingFunction(local, path)
+	translate = loadingFunction(local, path)
 
-    if translate == "" {
+	if translate == "" {
 		translate = loadingFunction(i.FallbackLocale, path)
 	}
 
@@ -98,7 +98,9 @@ func (i *I18n) loadStructTranslate(lang string, path string) string {
 		if !value.IsValid() {
 			return ""
 		}
-
+		if value.Kind() == reflect.Pointer {
+			value = reflect.Indirect(value)
+		}
 		if value.Kind() == reflect.Struct {
 			field := value.FieldByName(key)
 			if !field.IsValid() {

@@ -46,9 +46,78 @@ func TestI18n(t *testing.T) {
 	if i18n.T("chat.submit") != "chat.submit" {
 		t.Error("not pass")
 	}
-	if i18n.T("hint.message",map[string]any{
-		"name":"Alan",
+	if i18n.T("hint.message", map[string]any{
+		"name": "Alan",
 	}) != "the Alan is an user" {
+		t.Error("not pass")
+	}
+}
+
+func TestI18nStruct(t *testing.T) {
+	type Translate struct {
+		Greeting struct {
+			Welcome string `json:"welcome"`
+		} `json:"greeting"`
+
+		Chat struct {
+			Button string `json:"button"`
+		} `json:"chat"`
+
+		Hint struct {
+			Message string `json:"message"`
+		} `json:"hint"`
+	}
+	zh := &Translate{
+		Greeting: struct {
+			Welcome string "json:\"welcome\""
+		}{
+			Welcome: "你好",
+		},
+		Chat: struct {
+			Button string "json:\"button\""
+		}{
+			Button: "发送",
+		},
+		Hint: struct {
+			Message string "json:\"message\""
+		}{
+			Message: "提示信息",
+		},
+	}
+	en := &Translate{
+		Greeting: struct {
+			Welcome string "json:\"welcome\""
+		}{
+			Welcome: "welcome",
+		},
+		Chat: struct {
+			Button string "json:\"button\""
+		}{
+			Button: "send",
+		},
+		Hint: struct {
+			Message string "json:\"message\""
+		}{
+			Message: "hint message",
+		},
+	}
+	i18n_ := i18n.CreateI18n(&i18n.I18n{
+		Message: i18n.Message{
+			"zh": zh,
+			"en": en,
+		},
+		Local:          "zh",
+		FallbackLocale: "en",
+	})
+	if i18n_.T("greeting.welcome") != "greeting.welcome" {
+		t.Error("not pass")
+	}
+	i18n_.SetLocale("en")
+	if i18n_.T("Greeting.Welcome") != "welcome" {
+		t.Error("not pass")
+	}
+	i18n_.SetLocale("zh")
+	if i18n_.T("Greeting.Welcome") != "你好" {
 		t.Error("not pass")
 	}
 }
