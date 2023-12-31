@@ -39,8 +39,11 @@ func (i *I18n) T(path string, templates ...map[string]any) string {
 	}
 	translate := ""
 
-	var loadingFunction func(lang string, path string) string
-
+	var loadingFunction func(lang string, path []string) string
+	_path := []string{path}
+	if i.Delimiter != "" {
+		_path = strings.Split(path, i.Delimiter)
+	}
 	switch i.Message[local].(type) {
 	case map[string]any:
 		loadingFunction = i.loadMapTranslate
@@ -48,10 +51,10 @@ func (i *I18n) T(path string, templates ...map[string]any) string {
 		loadingFunction = i.loadStructTranslate
 	}
 
-	translate = loadingFunction(local, path)
+	translate = loadingFunction(local, _path)
 
 	if translate == "" {
-		translate = loadingFunction(i.FallbackLocale, path)
+		translate = loadingFunction(i.FallbackLocale, _path)
 	}
 
 	translate = utils.ToString(translate)
@@ -67,10 +70,10 @@ func (i *I18n) T(path string, templates ...map[string]any) string {
 	return translate
 }
 
-func (i *I18n) loadMapTranslate(lang string, path string) string {
-	keys := strings.Split(path, i.Delimiter)
+func (i *I18n) loadMapTranslate(lang string, path []string) string {
+
 	value := i.Message[lang]
-	for _, key := range keys {
+	for _, key := range path {
 		if value == nil {
 			value = ""
 			break
@@ -89,12 +92,11 @@ func (i *I18n) loadMapTranslate(lang string, path string) string {
 	return utils.ToString(value)
 }
 
-func (i *I18n) loadStructTranslate(lang string, path string) string {
+func (i *I18n) loadStructTranslate(lang string, path []string) string {
 
-	keys := strings.Split(path, i.Delimiter)
 	value := reflect.ValueOf(i.Message[lang])
 
-	for _, key := range keys {
+	for _, key := range path {
 		if !value.IsValid() {
 			return ""
 		}
