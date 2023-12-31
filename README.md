@@ -1,5 +1,14 @@
 # i18n
 
+
+
+
+## import
+```go
+import "github.com/jingyuexing/i18n"
+```
+
+
 ## usage
 
 ```go
@@ -36,7 +45,11 @@ func main(){
 
 	i18n := i18n.CreateI18n(&i18n.I18n{
 	    Message:        messages,
+	    // default language
 	    Local:          "zh",
+	    // When the key value specified in the Local language is not found,
+	    // it will search again in the language specified by FallbackLocale.
+	    // If it is also not found, the key passed in will be returned as is.
 	    FallbackLocale: "en",
 	})
 
@@ -45,5 +58,4 @@ func main(){
 		"name":"Alan"
 	}) // will print "the Alan is an user"
 }
-
 ```
