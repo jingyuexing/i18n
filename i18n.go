@@ -12,10 +12,19 @@ type I18n struct {
 	Local          string
 	FallbackLocale string
 	Delimiter      string
+	Languages      []string
 	isMap          bool
 }
 
-func CreateI18n(opts *I18n) *I18n {
+type Options struct {
+	Message        map[string]any
+	Local          string
+	FallbackLocale string
+	Delimiter      string
+	Languages      []string
+}
+
+func CreateI18n(opts *Options) *I18n {
 	d := "."
 	if opts.Delimiter != "" {
 		d = opts.Delimiter
@@ -25,7 +34,9 @@ func CreateI18n(opts *I18n) *I18n {
 		Local:          opts.Local,
 		FallbackLocale: opts.FallbackLocale,
 		Delimiter:      d,
+		Languages: opts.Languages,
 	}
+	_i18n.AllLanguge()
 
 	return _i18n
 }
@@ -123,8 +134,32 @@ func (i *I18n) loadStructTranslate(lang string, path []string) string {
 
 func (i *I18n) LoadMessage(lang string, message any) {
 	i.Message[lang] = message
+	i.AllLanguge()
 }
 
 func (i *I18n) SetLocale(locale string) {
 	i.Local = locale
+}
+
+func (i *I18n) CheckLanguage(lang string) bool {
+	for _lang := range i.Message {
+		if _lang == lang {
+			return true
+		}
+	}
+	return false
+}
+
+func (i *I18n) AllLanguge() []string{
+
+	if len(i.Languages) != 0 {
+		return i.Languages
+	}
+
+	lang := make([]string,0)
+	for _lang := range i.Message {
+		lang = append(lang, _lang)
+	}
+	i.Languages = lang
+	return i.Languages
 }
