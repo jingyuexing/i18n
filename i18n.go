@@ -75,7 +75,7 @@ func (i *I18n) T(path string, templates ...map[string]any) string {
 
 	if len(templates) != 0 {
 		for _, temp := range templates {
-			translate = utils.Template(translate, temp)
+			translate = utils.Template(translate, temp,"")
 		}
 	}
 	return translate
