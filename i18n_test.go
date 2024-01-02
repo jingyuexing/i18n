@@ -30,7 +30,7 @@ func TestI18n(t *testing.T) {
 		},
 	}
 
-	i18n := i18n.CreateI18n(&i18n.I18n{
+	i18n := i18n.CreateI18n(&i18n.Options{
 		Message:        messages,
 		Local:          "zh",
 		FallbackLocale: "en",
@@ -101,7 +101,7 @@ func TestI18nStruct(t *testing.T) {
 			Message: "hint message",
 		},
 	}
-	i18n_ := i18n.CreateI18n(&i18n.I18n{
+	i18n_ := i18n.CreateI18n(&i18n.Options{
 		Message: i18n.Message{
 			"zh": zh,
 			"en": en,
