@@ -34,7 +34,7 @@ func CreateI18n(opts *Options) *I18n {
 		Local:          opts.Local,
 		FallbackLocale: opts.FallbackLocale,
 		Delimiter:      d,
-		Languages: opts.Languages,
+		Languages:      opts.Languages,
 	}
 	_i18n.AllLanguge()
 
@@ -43,29 +43,29 @@ func CreateI18n(opts *Options) *I18n {
 
 type Message = map[string]any
 
-func (i *I18n) T(path string, templates ...map[string]any) string {
-	local := i.Local
-	if i.Local == "" {
-		local = i.FallbackLocale
+func (self *I18n) T(path string, templates ...map[string]any) string {
+	local := self.Local
+	if self.Local == "" {
+		local = self.FallbackLocale
 	}
 	translate := ""
 
 	var loadingFunction func(lang string, path []string) string
 	_path := []string{path}
-	if i.Delimiter != "" {
-		_path = strings.Split(path, i.Delimiter)
+	if self.Delimiter != "" {
+		_path = strings.Split(path, self.Delimiter)
 	}
-	switch i.Message[local].(type) {
+	switch self.Message[local].(type) {
 	case map[string]any:
-		loadingFunction = i.loadMapTranslate
+		loadingFunction = self.loadMapTranslate
 	default:
-		loadingFunction = i.loadStructTranslate
+		loadingFunction = self.loadStructTranslate
 	}
 
 	translate = loadingFunction(local, _path)
 
 	if translate == "" {
-		translate = loadingFunction(i.FallbackLocale, _path)
+		translate = loadingFunction(self.FallbackLocale, _path)
 	}
 
 	translate = utils.ToString(translate)
@@ -75,7 +75,7 @@ func (i *I18n) T(path string, templates ...map[string]any) string {
 
 	if len(templates) != 0 {
 		for _, temp := range templates {
-			translate = utils.Template(translate, temp,"")
+			translate = utils.Template(translate, temp, "")
 		}
 	}
 	return translate
@@ -103,9 +103,41 @@ func (i *I18n) loadMapTranslate(lang string, path []string) string {
 	return utils.ToString(value)
 }
 
-func (i *I18n) loadStructTranslate(lang string, path []string) string {
+func (self *I18n) TS(val any, field string, templates ...map[string]any) string {
+	v := reflect.ValueOf(val)
 
-	value := reflect.ValueOf(i.Message[lang])
+	if v.Kind() == reflect.Ptr {
+		v = v.Elem()
+	}
+
+	path := strings.Split(field, self.Delimiter)
+
+	for _, key := range path {
+		if !v.IsValid() {
+			return ""
+		}
+		if v.Kind() == reflect.Ptr {
+			v = v.Elem()
+		}
+		if v.Kind() == reflect.Struct {
+			field, found := v.Type().FieldByName(key)
+			if !found {
+				return ""
+			}
+			tag := field.Tag.Get("i18n")
+			if tag == "" {
+				return ""
+			}
+			return self.T(tag, templates...)
+		}
+		return ""
+	}
+	return ""
+}
+
+func (self *I18n) loadStructTranslate(lang string, path []string) string {
+
+	value := reflect.ValueOf(self.Message[lang])
 
 	for _, key := range path {
 		if !value.IsValid() {
@@ -132,17 +164,17 @@ func (i *I18n) loadStructTranslate(lang string, path []string) string {
 	return ""
 }
 
-func (i *I18n) LoadMessage(lang string, message any) {
-	i.Message[lang] = message
-	i.AllLanguge()
+func (self *I18n) LoadMessage(lang string, message any) {
+	self.Message[lang] = message
+	self.AllLanguge()
 }
 
-func (i *I18n) SetLocale(locale string) {
-	i.Local = locale
+func (self *I18n) SetLocale(locale string) {
+	self.Local = locale
 }
 
-func (i *I18n) CheckLanguage(lang string) bool {
-	for _lang := range i.Message {
+func (self *I18n) CheckLanguage(lang string) bool {
+	for _lang := range self.Message {
 		if _lang == lang {
 			return true
 		}
@@ -150,16 +182,16 @@ func (i *I18n) CheckLanguage(lang string) bool {
 	return false
 }
 
-func (i *I18n) AllLanguge() []string{
+func (self *I18n) AllLanguge() []string {
 
-	if len(i.Languages) != 0 {
-		return i.Languages
+	if len(self.Languages) != 0 {
+		return self.Languages
 	}
 
-	lang := make([]string,0)
-	for _lang := range i.Message {
+	lang := make([]string, 0)
+	for _lang := range self.Message {
 		lang = append(lang, _lang)
 	}
-	i.Languages = lang
-	return i.Languages
+	self.Languages = lang
+	return self.Languages
 }
