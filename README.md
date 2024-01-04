@@ -59,3 +59,43 @@ func main(){
 	}) // will print "the Alan is an user"
 }
 ```
+
+- struct tag
+
+```go
+package main
+
+import (
+	"fmt"
+
+	i18n "github.com/jingyuexing/i18n"
+)
+
+type User struct {
+	//
+	Name string `i18n:"Error.Validate.Name"`
+	Age string `i18n:"Error.Validate.Age"`
+}
+
+func main(){
+	i18n_ := i18n.CreateI18n(&i18n.Options{
+		Message: map[string]any{
+			// the chinese translate information
+			"zh":transZH,
+			// the english translate information
+			"en":transEN,
+		},
+		Local: "zh",
+		FallbackLocale: "en",
+	})
+
+	user := &User{
+		Name:"Altan",
+		Age:20,
+	}
+	// validate the fields
+	// ...
+	i18n_.TS(user,"Name") // The internationalized prompt information for the 'Name' field will be returned
+}
+
+```
