@@ -170,16 +170,14 @@ func (self *I18n) LoadMessage(lang string, message any) {
 }
 
 func (self *I18n) SetLocale(locale string) {
-	self.Local = locale
+	if self.CheckLanguage(locale){
+		self.Local = locale
+	}
 }
 
 func (self *I18n) CheckLanguage(lang string) bool {
-	for _lang := range self.Message {
-		if _lang == lang {
-			return true
-		}
-	}
-	return false
+	_,ok := self.Message[lang];
+	return ok
 }
 
 func (self *I18n) AllLanguge() []string {
