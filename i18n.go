@@ -134,27 +134,25 @@ func (self *I18n) TS(val any, field string, templates ...map[string]any) string 
 	}
 	return ""
 }
-
 func (self *I18n) loadStructTranslate(lang string, path []string) string {
-
 	value := reflect.ValueOf(self.Message[lang])
 
 	for _, key := range path {
 		if !value.IsValid() {
 			return ""
 		}
-		if value.Kind() == reflect.Pointer {
-			value = reflect.Indirect(value)
+		value = resolvePointer(value)
+		if value.Kind() != reflect.Struct {
+			return ""
 		}
-		if value.Kind() == reflect.Struct {
-			field := value.FieldByName(key)
+		field := value.FieldByName(key)
+		if !field.IsValid() {
+			field = findEmbeddedField(value, key)
 			if !field.IsValid() {
 				return ""
 			}
-			value = field
-		} else {
-			return ""
 		}
+		value = field
 	}
 
 	if value.IsValid() && value.CanInterface() {
@@ -162,6 +160,30 @@ func (self *I18n) loadStructTranslate(lang string, path []string) string {
 	}
 
 	return ""
+}
+
+func resolvePointer(value reflect.Value) reflect.Value {
+	if value.Kind() == reflect.Pointer {
+		return reflect.Indirect(value)
+	}
+	return value
+}
+
+func findEmbeddedField(value reflect.Value, key string) reflect.Value {
+	for i := 0; i < value.NumField(); i++ {
+		field := value.Field(i)
+		fieldType := value.Type().Field(i)
+		if fieldType.Anonymous {
+			embeddedValue := resolvePointer(field)
+			if embeddedValue.Kind() == reflect.Struct {
+				field := embeddedValue.FieldByName(key)
+				if field.IsValid() {
+					return field
+				}
+			}
+		}
+	}
+	return reflect.Value{}
 }
 
 func (self *I18n) LoadMessage(lang string, message any) {
